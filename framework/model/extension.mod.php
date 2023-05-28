@@ -77,7 +77,8 @@ function ext_module_convert($manifest) {
 		'welcome_support' => $welcome_support,
 		'shortcut' => $manifest['bindings']['shortcut'],
 		'function' => $manifest['bindings']['function'],
-		'permissions' => $manifest['permissions'] ? $manifest['permissions'] : array(),
+		'permissions' => !empty($manifest['permissions']) ? $manifest['permissions'] : array(),
+		'cloudsetting' => !empty($manifest['cloudsetting']) ? $manifest['cloudsetting'] : '',
 		'issystem' => 0,
 		'application_type' => 1
 	);
@@ -231,6 +232,12 @@ function ext_module_manifest_parse($xml) {
 				$manifest['permissions'][] = $row;
 			}
 		}
+	}
+	//云参数设置
+	$cloud_setting = empty($root->getElementsByTagName('cloudsetting')->length) ? '' : $root->getElementsByTagName('cloudsetting')->item(0)->textContent;
+	if (!empty($cloud_setting)) {
+		$cloud_setting = iunserializer($cloud_setting);
+		$manifest['cloudsetting'] = $cloud_setting['data'];
 	}
 	return $manifest;
 }
@@ -713,7 +720,7 @@ function ext_manifest_check($module_name, $manifest) {
 	//模块权限检测
 	if (isset($manifest['permissions']) && is_array($manifest['permissions']) && !empty($manifest['permissions'])) {
 		foreach ($manifest['permissions'] as $permission) {
-			if (trim($permission['title']) == '' || !preg_match('/^[a-z\d_]+$/i', $permission['do'])) {
+			if (trim($permission['title']) == '' || !preg_match('/^[a-z\d_]+$/i', $permission['permission'])) {
 				$error_msg .= '<br/>' . "&lt;permissions&gt;节点名称为： {$permission['title']} 的权限标识格式不正确,请检查标识名称或标识格式是否正确";
 			}
 		}

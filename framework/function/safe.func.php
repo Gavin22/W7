@@ -172,7 +172,7 @@ function safe_gpc_array($value, $default = array()) {
 	}
 	foreach ($value as &$row) {
 		if (is_numeric($row) && (2147483647 > $row && -2147483648 < $row)) {
-			$row = safe_gpc_int($row);
+			$row = $row;
 		} elseif (is_array($row)) {
 			$row = safe_gpc_array($row, $default);
 		} elseif (0 === strpos($row, 'http') || 0 === strpos($row, './')) {

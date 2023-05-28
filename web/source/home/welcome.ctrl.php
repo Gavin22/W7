@@ -27,8 +27,8 @@ if ('get_not_installed_modules' == $do) {
 	iajax(0, $not_installed_modules);
 }
 $module_name = !empty($_GPC['module_name']) ? safe_gpc_string($_GPC['module_name']) : (!empty($_GPC['m']) ? safe_gpc_string($_GPC['m']) : '');
-if ('ext' == $do && !$_GPC['system_welcome']) {
-	$version_id = intval($_GPC['version_id']);
+if ('ext' == $do && empty($_GPC['system_welcome'])) {
+	$version_id = !empty($_GPC['version_id']) ? intval($_GPC['version_id']) : 0;
 	if (!empty($version_id)) {
 		$version_info = miniapp_version($version_id);
 	}
@@ -94,6 +94,8 @@ if ('get_module_statistics' == $do) {
 	);
 
 	//因权限问题，用户所分配的模块不同，所以此处直接count安装列表
+	$install_modules['wxapp'] = empty($install_modules['wxapp']) ? array() : $install_modules['wxapp'];
+	$install_modules['account'] = empty($install_modules['account']) ? array() : $install_modules['account'];
 	$module_statistics['account']['total']['all'] = $module_statistics['account']['total']['uninstall'] + count((array) $install_modules['account']);
 	$module_statistics['wxapp']['total']['all'] = $module_statistics['wxapp']['total']['uninstall'] + count((array) $install_modules['wxapp']);
 
@@ -101,13 +103,13 @@ if ('get_module_statistics' == $do) {
 }
 
 if ('ext' == $do) {
-	$uniacid = intval($_GPC['uniacid']);
+	$uniacid = !empty($_GPC['uniacid']) ? intval($_GPC['uniacid']) : 0;
 	if (!empty($module_name)) {
 		$_W['current_module'] = module_fetch($module_name);
 	}
 
 	define('IN_MODULE', $module_name);
-	if ($_GPC['system_welcome']) {
+	if (!empty($_GPC['system_welcome'])) {
 		define('SYSTEM_WELCOME_MODULE', true);
 		$frames = buildframes('system_welcome');
 	} else {
@@ -253,7 +255,7 @@ if ('get_upgrade_modules' == $do) {
 					$is_unset = false;
 				}
 			}
-			if ($is_unset || $module_upgrade_info[$key]['service_expire']) {
+			if ($is_unset || !empty($module_upgrade_info[$key]['service_expire'])) {
 				unset($upgrade_modules[$key]);
 			}
 		}

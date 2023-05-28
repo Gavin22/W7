@@ -36,10 +36,16 @@ if ('post' == $do) {
 
 	$users_profile_exist = table('users_profile')->getByUid($uid);
 	if ('birth' == $type) {
+		$users_profile_exist['year'] = empty($users_profile_exist['year']) ? '' : $users_profile_exist['year'];
+		$users_profile_exist['month'] = empty($users_profile_exist['month']) ? '' : $users_profile_exist['month'];
+		$users_profile_exist['day'] = empty($users_profile_exist['day']) ? '' : $users_profile_exist['day'];
 		if ($users_profile_exist['year'] == $_GPC['year'] && $users_profile_exist['month'] == $_GPC['month'] && $users_profile_exist['day'] == $_GPC['day']) {
 			iajax(0, '未作修改！', '');
 		}
 	} elseif ('reside' == $type) {
+		$users_profile_exist['province'] = empty($users_profile_exist['province']) ? '' : $users_profile_exist['province'];
+		$users_profile_exist['city'] = empty($users_profile_exist['city']) ? '' : $users_profile_exist['city'];
+		$users_profile_exist['district'] = empty($users_profile_exist['district']) ? '' : $users_profile_exist['district'];
 		if ($users_profile_exist['province'] == $_GPC['province'] && $users_profile_exist['city'] == $_GPC['city'] && $users_profile_exist['district'] == $_GPC['district']) {
 			iajax(0, '未作修改！', '');
 		}
@@ -49,6 +55,7 @@ if ('post' == $do) {
 				iajax(0, '未做修改！', '');
 			}
 		} else {
+			$users_profile_exist[$type] = empty($users_profile_exist[$type]) ? '' : $users_profile_exist[$type];
 			if ($users_profile_exist[$type] == $_GPC[$type] && empty($extra_filed_key)) {
 				iajax(0, '未作修改！', '');
 			}
@@ -98,6 +105,17 @@ if ('post' == $do) {
 					iajax(-1, '操作失败，请联系管理员解决！', '');
 				}
 			}
+			break;
+		case 'username':
+			if (!$_W['isadmin'] && $_W['uid'] != $user['owner_uid']) {
+				iajax(-1, '无权限修改，请联系网站创始人！');
+			}
+			$username = safe_gpc_string($_GPC['username']);
+			$name_exist = pdo_get('users', array('username' => $username));
+			if (!empty($name_exist)) {
+				iajax(-1, '用户名已存在，请更换其他用户名！', '');
+			}
+			$result = pdo_update('users', array('username' => $username), array('uid' => $uid));
 			break;
 		case 'vice_founder_name':
 			$userinfo = user_single(array('username' => safe_gpc_string($_GPC['vice_founder_name'])));
@@ -348,17 +366,11 @@ if ('base' == $do) {
 
 	$extra_limit_table = table('users_extra_limit');
 	$extra_limit_info = $extra_limit_table->getExtraLimitByUid($_W['uid']);
-
-	$endtime = $user['endtime'];
+	$endtime = user_end_time($user['uid']);
 	$total_timelimit = $group_info['timelimit'] + $extra_limit_info['timelimit'];
-
-	if (USER_ENDTIME_GROUP_EMPTY_TYPE == $endtime || USER_ENDTIME_GROUP_UNLIMIT_TYPE == $endtime) {
+	if (0 == $endtime) {
 		$total_timelimit = '永久';
 		$endtime = '永久';
-	} elseif (USER_ENDTIME_GROUP_DELETE_TYPE == $endtime && 0 == $total_timelimit) {
-		$endtime = 0 == $total_timelimit ? date('Y-m-d', $user['joindate']) : date('Y-m-d', $user['endtime']);
-	} else {
-		$endtime = date('Y-m-d', $endtime);
 	}
 
 	$setting_sms_sign = setting_load('site_sms_sign');

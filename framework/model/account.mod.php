@@ -180,7 +180,7 @@ function uni_need_account_info() {
 	$module_type = empty($_GPC['module_type']) ? '' : safe_gpc_string($_GPC['module_type']);
 	if (defined('FRAME') && in_array(FRAME, array('account', 'wxapp')) && !$system_welcome && $module_type != 'system_welcome') {
 		if ('site' == $controller && 'entry' == $action) {
-			$eid = intval($_GPC['eid']);
+			$eid = !empty($_GPC['eid']) ? intval($_GPC['eid']) : 0;
 			if (!empty($eid)) {
 				$entry = module_entry($eid);
 			} else {
@@ -195,8 +195,8 @@ function uni_need_account_info() {
 					$entry = array(
 						'module' => $entry_module_name,
 						'do' => safe_gpc_string($_GPC['do']),
-						'state' => safe_gpc_string($_GPC['state']),
-						'direct' => safe_gpc_string($_GPC['direct']),
+						'state' => !empty($_GPC['state']) ? safe_gpc_string($_GPC['state']) : '',
+						'direct' => !empty($_GPC['direct']) ? safe_gpc_string($_GPC['direct']) : 0,
 					);
 				}
 			}
@@ -1009,9 +1009,8 @@ function account_create($uniacid, $account) {
 	unset($account['type']);
 
 	$accountdata = array('uniacid' => $uniacid, 'type' => $type, 'hash' => random(8));
-	$user_create_account_info = permission_user_account_num();
 
-	if (!$_W['isadmin'] && $_W['user']['endtime'] > USER_ENDTIME_GROUP_UNLIMIT_TYPE) {
+	if (!$_W['isadmin']) {
 		$accountdata['endtime'] = $_W['user']['endtime'];
 	}
 	pdo_insert('account', $accountdata);
